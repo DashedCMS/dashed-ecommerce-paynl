@@ -15,9 +15,9 @@ use Dashed\DashedEcommerceCore\Models\PinTerminal;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use RalphJSmit\Filament\MediaLibrary\Models\MediaLibraryItem;
+use RalphJSmit\Filament\MediaLibrary\Models\MediaLibraryFolder;
 use Dashed\DashedEcommerceCore\Contracts\PaymentProviderContract;
-use RalphJSmit\Filament\MediaLibrary\Media\Models\MediaLibraryItem;
-use RalphJSmit\Filament\MediaLibrary\Media\Models\MediaLibraryFolder;
 
 class PayNL implements PaymentProviderContract
 {
