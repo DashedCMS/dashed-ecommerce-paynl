@@ -12,8 +12,8 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
 use Filament\Infolists\Components\TextEntry;
-use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Dashed\DashedEcommercePaynl\Classes\PayNL;
+use Dashed\DashedCore\Traits\HasSettingsPermission;
 
 class PayNLSettingsPage extends Page
 {
