@@ -178,8 +178,8 @@ class PayNL implements PaymentProviderContract
             'amount' => number_format($orderPayment->amount, 2, '.', ''),
             'returnUrl' => url(ShoppingCart::getCompleteUrl()) . '?orderId=' . $orderPayment->order->hash . '&paymentId=' . $orderPayment->hash,
             'ipaddress' => request()->ip(),
-            'paymentMethod' => $orderPayment->paymentMethod->pinTerminal ? 1927 : $orderPayment->paymentMethod->psp_id,
-            'bank' => $orderPayment->paymentMethod->pinTerminal->pin_terminal_id ?? null,
+            'paymentMethod' => $orderPayment->paymentMethod?->pinTerminal ? 1927 : $orderPayment->paymentMethod?->psp_id,
+            'bank' => $orderPayment->paymentMethod?->pinTerminal?->pin_terminal_id ?? null,
 //            'paymentMethod' => $orderPayment->paymentMethod->psp_id,
 //            'paymentMethod' => $orderPayment->paymentMethod->pinTerminal->pin_terminal_id,
             'currency' => 'EUR',
@@ -199,7 +199,11 @@ class PayNL implements PaymentProviderContract
                 'phoneNumber' => $orderPayment->order->phone_number,
                 'emailAddress' => $orderPayment->order->email,
                 'initials' => $orderPayment->order->initials,
-                'gender' => $orderPayment->order->gender,
+                'gender' => match (strtoupper((string) $orderPayment->order->gender)) {
+                    'M', 'MALE' => 'M',
+                    'F', 'FEMALE' => 'F',
+                    default => null,
+                },
                 'dob' => $orderPayment->order->date_of_birth,
             ],
             'address' => [
