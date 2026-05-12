@@ -23,6 +23,16 @@ class DashedEcommercePaynlServiceProvider extends PackageServiceProvider
             fn (\Illuminate\Http\Request $request) => (string) ($request->input('orderId') ?? $request->input('order_id') ?? ''),
         );
 
+        cms()->registerIntegration([
+            'slug' => 'paynl',
+            'label' => 'PayNL',
+            'icon' => 'heroicon-o-credit-card',
+            'category' => 'payment',
+            'settings_page' => \Dashed\DashedEcommercePaynl\Filament\Pages\Settings\PayNLSettingsPage::class,
+            'health_check' => [\Dashed\DashedEcommercePaynl\Classes\PayNL::class, 'healthCheck'],
+            'package' => 'dashed-ecommerce-paynl',
+        ]);
+
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(SyncPayNLPaymentMethodsCommand::class)
