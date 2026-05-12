@@ -15,6 +15,7 @@ use Dashed\DashedEcommerceCore\Models\PinTerminal;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Classes\PaymentMethods;
 use RalphJSmit\Filament\MediaLibrary\Models\MediaLibraryItem;
 use RalphJSmit\Filament\MediaLibrary\Models\MediaLibraryFolder;
 use Dashed\DashedEcommerceCore\Contracts\PaymentProviderContract;
@@ -71,21 +72,29 @@ class PayNL implements PaymentProviderContract
         }
 
         foreach ($allPaymentMethods as $allPaymentMethod) {
+            $isNewlyCreated = false;
+
             if (! $paymentMethod = PaymentMethod::where('psp', self::PSP)->where('psp_id', $allPaymentMethod['id'])->where('site_id', $site['id'])->first()) {
                 $paymentMethod = new PaymentMethod();
                 $paymentMethod->site_id = $site['id'];
                 $paymentMethod->available_from_amount = $allPaymentMethod['min_amount'] ?: 0;
                 $paymentMethod->psp_id = $allPaymentMethod['id'];
                 $paymentMethod->psp = self::PSP;
+                $paymentMethod->active = false;
                 foreach (Locales::getLocales() as $locale) {
                     $paymentMethod->setTranslation('name', $locale['id'], $allPaymentMethod['visibleName']);
                 }
+                $isNewlyCreated = true;
             }
 
             if (($allPaymentMethod['brand']['image'] ?? false) && ! $paymentMethod->image) {
                 $paymentMethod->image = mediaHelper()->uploadFromPath('https://static.pay.nl/' . $allPaymentMethod['brand']['image'], 'paynl', true);
             }
             $paymentMethod->save();
+
+            if ($isNewlyCreated) {
+                PaymentMethods::notifyAdminsOfNewPaymentMethod($paymentMethod);
+            }
 
             //            $image = file_get_contents('https://static.pay.nl/' . $allPaymentMethod['brand']['image']);
             //            if ($image) {
