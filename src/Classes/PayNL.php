@@ -22,6 +22,23 @@ use Dashed\DashedEcommerceCore\Contracts\PaymentProviderContract;
 
 class PayNL implements PaymentProviderContract
 {
+    /**
+     * Lightweight health check for the IntegrationsDashboard. Only verifies
+     * the two PayNL credentials are set — does NOT call the PayNL API on
+     * every dashboard render.
+     */
+    public static function healthCheck(?string $siteId = null): \Dashed\DashedCore\Integrations\IntegrationHealth
+    {
+        $atHash = \Dashed\DashedCore\Models\Customsetting::get('paynl_at_hash', $siteId);
+        $slCode = \Dashed\DashedCore\Models\Customsetting::get('paynl_sl_code', $siteId);
+
+        if (empty($atHash) || empty($slCode)) {
+            return \Dashed\DashedCore\Integrations\IntegrationHealth::misconfigured('AT hash of SL code ontbreekt');
+        }
+
+        return \Dashed\DashedCore\Integrations\IntegrationHealth::ok();
+    }
+
     public const PSP = 'paynl';
 
     public static function initialize(?string $siteId = null): void
