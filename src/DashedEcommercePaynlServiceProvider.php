@@ -16,6 +16,13 @@ class DashedEcommercePaynlServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        // Register the PayNL webhook event_id extractor so the
+        // EnsureWebhookIdempotency middleware can deduplicate retries.
+        app(\Dashed\DashedCore\Webhooks\WebhookEventIdResolver::class)->extend(
+            'paynl',
+            fn (\Illuminate\Http\Request $request) => (string) ($request->input('orderId') ?? $request->input('order_id') ?? ''),
+        );
+
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(SyncPayNLPaymentMethodsCommand::class)
