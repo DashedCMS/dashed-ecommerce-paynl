@@ -18,10 +18,12 @@ class DashedEcommercePaynlServiceProvider extends PackageServiceProvider
     {
         // Register the PayNL webhook event_id extractor so the
         // EnsureWebhookIdempotency middleware can deduplicate retries.
-        app(\Dashed\DashedCore\Webhooks\WebhookEventIdResolver::class)->extend(
-            'paynl',
-            fn (\Illuminate\Http\Request $request) => (string) ($request->input('orderId') ?? $request->input('order_id') ?? ''),
-        );
+        if (class_exists(\Dashed\DashedCore\Webhooks\WebhookEventIdResolver::class)) {
+            app(\Dashed\DashedCore\Webhooks\WebhookEventIdResolver::class)->extend(
+                'paynl',
+                fn (\Illuminate\Http\Request $request) => (string) ($request->input('orderId') ?? $request->input('order_id') ?? ''),
+            );
+        }
 
         if (method_exists(cms(), 'registerIntegration')) {
             cms()->registerIntegration([
