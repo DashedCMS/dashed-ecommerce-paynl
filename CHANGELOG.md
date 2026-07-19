@@ -2,6 +2,11 @@
 
 All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 
+## v4.1.3 - 2026-07-19
+
+### Fixed
+- `PayNL::startTransaction()` gooide `PAY-2008 - Parameter enduser.dob is invalid: Expected value to be of type string, string given` waardoor de betaling niet startte. `date_of_birth` is een ongecaste `date`-kolom en werd als ruwe `Y-m-d`-string (of leeg) doorgegeven, terwijl PayNL `DD-MM-YYYY` verwacht. De fout trad ook op wanneer er geen geboortedatum was ingevuld, omdat de `dob`-key dan met een lege/ongeldige waarde werd meegestuurd. Nieuwe `PayNL::formatDateOfBirth()` zet de waarde om naar `DD-MM-YYYY` en geeft `null` terug bij leeg/whitespace/onparseerbaar/`0000-00-00`/toekomstige datum; de `dob`-key wordt nu alleen meegestuurd als er een geldige datum is.
+
 ## v4.0.4 - 2026-05-03
 
 ### Fixed

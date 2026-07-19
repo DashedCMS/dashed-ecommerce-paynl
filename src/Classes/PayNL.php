@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommercePaynl\Classes;
 
 use Exception;
 use Paynl\Instore;
+use Illuminate\Support\Carbon;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Http;
 use Dashed\DashedCore\Classes\Locales;
@@ -230,7 +231,6 @@ class PayNL implements PaymentProviderContract
                     'F', 'FEMALE' => 'F',
                     default => null,
                 },
-                'dob' => $orderPayment->order->date_of_birth,
             ],
             'address' => [
                 'streetName' => $orderPayment->order->street ?: '',
@@ -250,6 +250,14 @@ class PayNL implements PaymentProviderContract
             ],
         ];
 
+        // PayNL verwacht dob als geldige DD-MM-YYYY string en weigert de start
+        // (PAY-2008) zodra de key aanwezig maar leeg/verkeerd geformatteerd is.
+        // Alleen meesturen als we een geldige datum kunnen opmaken.
+        $dob = self::formatDateOfBirth($orderPayment->order->date_of_birth);
+        if ($dob !== null) {
+            $transactionData['enduser']['dob'] = $dob;
+        }
+
         $result = \Paynl\Transaction::start($transactionData);
 
         $orderPayment->psp_id = $result->getTransactionId();
@@ -262,6 +270,34 @@ class PayNL implements PaymentProviderContract
             'transaction' => $result,
             'redirectUrl' => $result->getRedirectUrl(),
         ];
+    }
+
+    /**
+     * PayNL wil de geboortedatum als DD-MM-YYYY string. In de database staat
+     * date_of_birth als (ongecaste) Y-m-d string of leeg. Zet 'm om naar het
+     * juiste formaat; geef null terug bij leeg/onparseerbaar zodat de dob-key
+     * volledig weggelaten kan worden i.p.v. een ongeldige waarde mee te sturen.
+     */
+    public static function formatDateOfBirth($dateOfBirth): ?string
+    {
+        if (blank($dateOfBirth)) {
+            return null;
+        }
+
+        try {
+            $date = Carbon::parse($dateOfBirth);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+
+        // Weiger onzinnige datums (bijv. MySQL '0000-00-00' -> jaar -1 of een
+        // toekomstige datum) zodat we nooit een geldig-geformatteerde maar
+        // inhoudelijk ongeldige dob naar PayNL sturen.
+        if ($date->year < 1900 || $date->isFuture()) {
+            return null;
+        }
+
+        return $date->format('d-m-Y');
     }
 
     public static function cancelPinTerminalTransaction(OrderPayment $orderPayment): bool
