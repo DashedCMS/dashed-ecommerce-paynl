@@ -59,13 +59,13 @@ class PayNLSettingsPage extends Page
                         'lg' => 2,
                     ]),
                 TextInput::make("paynl_at_hash_{$site['id']}")
-                    ->label('PayNL AT hash')
+                    ->label(__('PayNL AT hash'))
                     ->maxLength(255),
                 TextInput::make("paynl_sl_code_{$site['id']}")
-                    ->label('PayNL SL code')
+                    ->label(__('PayNL SL code'))
                     ->maxLength(255),
                 Toggle::make("paynl_test_mode_{$site['id']}")
-                    ->label('Testmodus activeren'),
+                    ->label(__('Testmodus activeren')),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -100,7 +100,7 @@ class PayNLSettingsPage extends Page
         }
 
         Notification::make()
-            ->title('De PayNL instellingen zijn opgeslagen')
+            ->title(__('De PayNL instellingen zijn opgeslagen'))
             ->success()
             ->send();
 
