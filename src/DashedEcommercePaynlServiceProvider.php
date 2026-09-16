@@ -6,6 +6,7 @@ use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Dashed\DashedEcommercePaynl\Classes\PayNL;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Dashed\DashedEcommercePaynl\Commands\MatchPaynlRefundsCommand;
 use Dashed\DashedEcommercePaynl\Commands\SyncPayNLPinTerminalsCommand;
 use Dashed\DashedEcommercePaynl\Commands\SyncPayNLPaymentMethodsCommand;
 use Dashed\DashedEcommercePaynl\Filament\Pages\Settings\PayNLSettingsPage;
@@ -57,6 +58,9 @@ class DashedEcommercePaynlServiceProvider extends PackageServiceProvider
                 ->everyFifteenMinutes();
             $schedule->command(SyncPayNLPinTerminalsCommand::class)
                 ->everyFifteenMinutes();
+            $schedule->command(MatchPaynlRefundsCommand::class)
+                ->dailyAt('04:00')
+                ->withoutOverlapping();
         });
 
         cms()->registerSettingsDocs(
@@ -114,6 +118,7 @@ MARKDOWN,
             ->hasCommands([
                 SyncPayNLPaymentMethodsCommand::class,
                 SyncPayNLPinTerminalsCommand::class,
+                MatchPaynlRefundsCommand::class,
             ]);
 
         cms()->builder('plugins', [
