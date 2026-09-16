@@ -19,10 +19,28 @@ class DashedEcommercePaynlServiceProvider extends PackageServiceProvider
     {
         // Register the PayNL webhook event_id extractor so the
         // EnsureWebhookIdempotency middleware can deduplicate retries.
+        //
+        // De transactie-id alleen is niet genoeg: Pay.nl roept dezelfde
+        // exchange voor dezelfde transactie meerdere keren aan met een andere
+        // 'action' (new_ppt, pending, paid, cancel, refund, chargeback). Met
+        // alleen de transactie-id zou de terugbetaling gededupliceerd worden
+        // tegen de betaling van weken eerder en nooit bij de controller
+        // aankomen. Zonder 'action' blijft het de kale transactie-id, zodat
+        // een aanroep die er geen meestuurt zich gedraagt als voorheen.
         if (class_exists(\Dashed\DashedCore\Webhooks\WebhookEventIdResolver::class)) {
             app(\Dashed\DashedCore\Webhooks\WebhookEventIdResolver::class)->extend(
                 'paynl',
-                fn (\Illuminate\Http\Request $request) => (string) ($request->input('orderId') ?? $request->input('order_id') ?? ''),
+                function (\Illuminate\Http\Request $request): string {
+                    $transactionId = trim((string) ($request->input('orderId') ?? $request->input('order_id') ?? ''));
+
+                    if ($transactionId === '') {
+                        return '';
+                    }
+
+                    $action = trim((string) ($request->input('action') ?? ''));
+
+                    return $action === '' ? $transactionId : $transactionId . ':' . $action;
+                },
             );
         }
 

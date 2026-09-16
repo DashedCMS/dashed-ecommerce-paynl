@@ -15,8 +15,10 @@ class PaynlTransactions
     {
         PayNL::initialize($payment->order?->site_id);
 
-        $transaction = \Paynl\Transaction::get($payment->psp_id);
-
-        return round((float) $transaction->getRefundedAmount(), 2);
+        // status() is dezelfde aanroep als get(), maar dan één in plaats van twee.
+        // getRefundedAmount() staat in euro; getRefundedCurrencyAmount() zou de
+        // valuta van de shop zijn, dus bij een niet-euro-shop matcht dit bedrag
+        // niet met het ordertotaal en valt de koppeling terug op een melding.
+        return round((float) \Paynl\Transaction::status($payment->psp_id)->getRefundedAmount(), 2);
     }
 }

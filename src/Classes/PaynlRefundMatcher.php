@@ -7,6 +7,7 @@ use InvalidArgumentException;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\RefundRegistrar;
 
 /**
@@ -21,6 +22,8 @@ use Dashed\DashedEcommerceCore\Services\OrderReturn\RefundRegistrar;
 class PaynlRefundMatcher
 {
     public const TAG_FAILED = 'order.paynl-refund-check-failed';
+
+    public const TAG_SKIPPED = 'order.paynl-refund-skipped';
 
     public function __construct(
         protected PaynlTransactions $transactions,
@@ -77,6 +80,19 @@ class PaynlRefundMatcher
                 // Race met een handmatige registratie: inmiddels terugbetaald is 'nothing',
                 // anders een gewone unmatched met de reden van de registrar.
                 if ($creditOrder->fresh()->orderPayments()->where('status', 'paid')->exists()) {
+                    // Wel een spoor: zonder orderlog verdwijnt een overgeslagen
+                    // bedrag hier geruisloos en is later niet na te gaan waarom
+                    // Pay.nl meer meldt dan er geboekt staat.
+                    OrderLog::createLog(
+                        orderId: $order->id,
+                        tag: self::TAG_SKIPPED,
+                        note: __('Pay.nl-terugbetaling overgeslagen: :nieuw was intussen al geregistreerd op creditorder :factuur. :fout', [
+                            'nieuw' => CurrencyHelper::formatPrice($new),
+                            'factuur' => $creditOrder->invoice_id,
+                            'fout' => $e->getMessage(),
+                        ]),
+                    );
+
                     return new PaynlRefundMatch('nothing', $refunded, $registered, $new);
                 }
 
