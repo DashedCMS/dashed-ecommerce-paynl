@@ -25,6 +25,7 @@ class PaynlRefundMatcher
     public function __construct(
         protected PaynlTransactions $transactions,
         protected RefundRegistrar $registrar,
+        protected PaynlRefundUnmatchedNotifier $notifier,
     ) {
     }
 
@@ -79,7 +80,10 @@ class PaynlRefundMatcher
                     return new PaynlRefundMatch('nothing', $refunded, $registered, $new);
                 }
 
-                return new PaynlRefundMatch('unmatched', $refunded, $registered, $new, null, $e->getMessage(), $candidateAmounts, $otherAmounts);
+                $match = new PaynlRefundMatch('unmatched', $refunded, $registered, $new, null, $e->getMessage(), $candidateAmounts, $otherAmounts);
+                $this->notifier->notify($payment, $match);
+
+                return $match;
             }
 
             return new PaynlRefundMatch('registered', $refunded, $registered, $new, $creditOrder, '', $candidateAmounts, $otherAmounts);
@@ -91,7 +95,10 @@ class PaynlRefundMatcher
             default => __('Het terugbetaalde bedrag past bij geen enkele openstaande creditorder.'),
         };
 
-        return new PaynlRefundMatch('unmatched', $refunded, $registered, $new, null, $reason, $candidateAmounts, $otherAmounts);
+        $match = new PaynlRefundMatch('unmatched', $refunded, $registered, $new, null, $reason, $candidateAmounts, $otherAmounts);
+        $this->notifier->notify($payment, $match);
+
+        return $match;
     }
 
     /** Wat er al onder deze Pay.nl-transactie op creditorders van deze bestelling is geboekt. */
