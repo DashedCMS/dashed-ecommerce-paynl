@@ -104,9 +104,10 @@ class PaynlRefundMatcher
             ->where('status', 'paid')
             ->where('psp', 'paynl')
             ->where('psp_id', $pspId)
-            ->sum('amount');
+            ->get(['amount'])
+            ->sum(fn (OrderPayment $p) => abs((float) $p->amount));
 
-        return round(abs((float) $sum), 2);
+        return round((float) $sum, 2);
     }
 
     /**
