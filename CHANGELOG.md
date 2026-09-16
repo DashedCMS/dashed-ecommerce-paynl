@@ -2,6 +2,11 @@
 
 All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 
+## Unreleased
+
+### Added
+- **Terugbetalingen bij Pay.nl worden gekoppeld aan de creditorder van een retour.** `PaynlRefundMatcher` (via `MatchPaynlRefundJob`, gestart door `PaymentRefundReportedEvent` uit ec-core en door het nachtelijke `paynl:match-refunds`) boekt een exact passend bedrag via `RefundRegistrar` en mailt de klant; alles wat niet exact past wordt gemeld met `AdminPaynlRefundUnmatchedMail` en orderlog `order.paynl-refund-unmatched`, en niet geboekt. Vereist dashed-ecommerce-core met `PaymentRefundReportedEvent`; zonder dat event werkt alleen het vangnet.
+
 ## v4.1.3 - 2026-07-19
 
 ### Fixed
