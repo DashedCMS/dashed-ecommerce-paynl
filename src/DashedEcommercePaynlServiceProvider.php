@@ -37,6 +37,20 @@ class DashedEcommercePaynlServiceProvider extends PackageServiceProvider
             ]);
         }
 
+        // Terugbetaling gemeld door de exchange (ec-core): koppel hem aan de
+        // creditorder van de retour. Guard op class_exists zodat dit package
+        // ook boot tegen een ec-core zonder dit event.
+        if (class_exists(\Dashed\DashedEcommerceCore\Events\Orders\PaymentRefundReportedEvent::class)) {
+            \Illuminate\Support\Facades\Event::listen(
+                \Dashed\DashedEcommerceCore\Events\Orders\PaymentRefundReportedEvent::class,
+                function (\Dashed\DashedEcommerceCore\Events\Orders\PaymentRefundReportedEvent $event): void {
+                    if ($event->payment->psp === 'paynl') {
+                        \Dashed\DashedEcommercePaynl\Jobs\MatchPaynlRefundJob::dispatch($event->payment);
+                    }
+                },
+            );
+        }
+
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(SyncPayNLPaymentMethodsCommand::class)
