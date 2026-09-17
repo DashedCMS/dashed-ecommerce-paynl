@@ -7,8 +7,8 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 use Dashed\DashedEcommercePaynl\Classes\PaynlRefundMatch;
 use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
 
