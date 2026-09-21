@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\PinTerminal;
@@ -232,22 +233,7 @@ class PayNL implements PaymentProviderContract
                     default => null,
                 },
             ],
-            'address' => [
-                'streetName' => $orderPayment->order->street ?: '',
-                'houseNumber' => $orderPayment->order->house_nr ?: '',
-                'zipCode' => $orderPayment->order->zip_code ?: '',
-                'city' => $orderPayment->order->city ?: '',
-                'country' => Countries::getCountryIsoCode($orderPayment->order->country) ?? '',
-            ],
-            'invoiceAddress' => [
-                'initials' => $orderPayment->order->initials,
-                'lastName' => $orderPayment->order->last_name,
-                'streetName' => $orderPayment->order->invoice_street ?: $orderPayment->order->street,
-                'houseNumber' => $orderPayment->order->invoice_house_nr ?: $orderPayment->order->house_nr,
-                'zipCode' => $orderPayment->order->invoice_zip_code ?: $orderPayment->order->zip_code,
-                'city' => $orderPayment->order->invoice_city ?: $orderPayment->order->city,
-                'country' => Countries::getCountryIsoCode($orderPayment->order->invoice_country ?: $orderPayment->order->country),
-            ],
+            ...self::addressData($orderPayment->order),
         ];
 
         // PayNL verwacht dob als geldige DD-MM-YYYY string en weigert de start
@@ -256,6 +242,11 @@ class PayNL implements PaymentProviderContract
         $dob = self::formatDateOfBirth($orderPayment->order->date_of_birth);
         if ($dob !== null) {
             $transactionData['enduser']['dob'] = $dob;
+        }
+
+        // Bestaat pas vanaf ec-core v4.134.0; dit pakket vereist ec-core niet.
+        if (method_exists($orderPayment, 'recordPspRequest')) {
+            $orderPayment->recordPspRequest($transactionData);
         }
 
         $result = \Paynl\Transaction::start($transactionData);
@@ -269,6 +260,37 @@ class PayNL implements PaymentProviderContract
         return [
             'transaction' => $result,
             'redirectUrl' => $result->getRedirectUrl(),
+        ];
+    }
+
+    /**
+     * Aflever- en factuuradres voor de transactie. Het factuurland valt terug
+     * op het afleverland als het niet te herkennen is: de SDK laat een lege
+     * landcode weg, en achteraf betalen via Riverty weigert de betaling dan
+     * met "Value is required" op customer.address.countryCode.
+     */
+    public static function addressData(Order $order): array
+    {
+        $countryCode = Countries::getCountryIsoCode($order->country);
+        $invoiceCountryCode = Countries::getCountryIsoCode($order->invoice_country) ?: $countryCode;
+
+        return [
+            'address' => [
+                'streetName' => $order->street ?: '',
+                'houseNumber' => $order->house_nr ?: '',
+                'zipCode' => $order->zip_code ?: '',
+                'city' => $order->city ?: '',
+                'country' => $countryCode ?? '',
+            ],
+            'invoiceAddress' => [
+                'initials' => $order->initials,
+                'lastName' => $order->last_name,
+                'streetName' => $order->invoice_street ?: $order->street,
+                'houseNumber' => $order->invoice_house_nr ?: $order->house_nr,
+                'zipCode' => $order->invoice_zip_code ?: $order->zip_code,
+                'city' => $order->invoice_city ?: $order->city,
+                'country' => $invoiceCountryCode,
+            ],
         ];
     }
 
