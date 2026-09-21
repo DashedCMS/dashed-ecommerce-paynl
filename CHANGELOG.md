@@ -2,6 +2,11 @@
 
 All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 
+## v4.3.3 - 2026-09-21
+
+### Fixed
+- **Terugbetaling van het restant na verrekening op rekening.** Is een retour op een order op rekening deels verrekend met het openstaande bedrag (ec-core 4.138.0), dan vergelijkt de matcher een Pay.nl-terugbetaling nu met wat er nog terug moet (`OrderReturn::refundableAmount()`) in plaats van het volle creditbedrag. Met een oudere ec-core blijft het oude gedrag.
+
 ## v4.3.2 - 2026-09-21
 
 ### Fixed
