@@ -63,10 +63,10 @@ class PaynlRefundMatcher
         }
 
         [$candidates, $others] = $this->openCreditOrders($order);
-        $candidateAmounts = $candidates->mapWithKeys(fn (Order $c) => [$c->id => round(abs((float) $c->total), 2)])->all();
+        $candidateAmounts = $candidates->mapWithKeys(fn (Order $c) => [$c->id => $this->refundableFor($c)])->all();
         $otherAmounts = $others->mapWithKeys(fn (Order $c) => [$c->id => round(abs((float) $c->total), 2)])->all();
 
-        $exact = $candidates->filter(fn (Order $c) => abs(round(abs((float) $c->total), 2) - $new) < 0.01)->values();
+        $exact = $candidates->filter(fn (Order $c) => abs($candidateAmounts[$c->id] - $new) < 0.01)->values();
 
         if ($exact->count() === 1) {
             /** @var Order $creditOrder */
@@ -191,6 +191,18 @@ class PaynlRefundMatcher
      * @return array{0: \Illuminate\Support\Collection<int, Order>, 1: \Illuminate\Support\Collection<int, Order>}
      *   [kandidaten met herkomstretour, overige open creditorders]
      */
+    /**
+     * Het bedrag dat bij Pay.nl terug hoort te komen: bij een order op rekening
+     * is een deel van de creditering vaak al met de openstaande factuur
+     * verrekend, en dan wordt alleen de rest terugbetaald.
+     */
+    protected function refundableFor(Order $creditOrder): float
+    {
+        return method_exists($creditOrder->originReturn, 'refundableAmount')
+            ? round($creditOrder->originReturn->refundableAmount(), 2)
+            : round(abs((float) $creditOrder->total), 2);
+    }
+
     protected function openCreditOrders(Order $order): array
     {
         $open = Order::query()
