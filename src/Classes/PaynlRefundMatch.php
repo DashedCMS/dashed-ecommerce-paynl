@@ -7,8 +7,10 @@ use Dashed\DashedEcommerceCore\Models\Order;
 /**
  * Uitkomst van één koppelpoging. 'nothing': niets nieuws bij Pay.nl of geen
  * Pay.nl-betaling; 'registered': geboekt op $creditOrder; 'unmatched': er is
- * een nieuw bedrag maar geen exacte kandidaat (zie $reason); 'failed': Pay.nl
- * was niet te bereiken.
+ * een nieuw bedrag maar geen exacte kandidaat (zie $reason); 'covered': het
+ * bedrag staat al als niet-Pay.nl-terugbetaling op een creditorder (bijv. een
+ * annulering met "Contant") en er staat niets meer open, dus niets geboekt en
+ * geen melding; 'failed': Pay.nl was niet te bereiken.
  */
 class PaynlRefundMatch
 {

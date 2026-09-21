@@ -15,7 +15,9 @@ use Dashed\DashedEcommerceCore\Services\OrderReturn\RefundRegistrar;
  * van een verwerkte retour. Rekent altijd met het cumulatieve Pay.nl-bedrag
  * minus wat wij al onder dezelfde transactie boekten, dus een tweede aanroep
  * zonder nieuw bedrag doet niets. Alleen een exacte treffer op precies één
- * kandidaat wordt geboekt; al het andere is 'unmatched' en wordt gemeld
+ * kandidaat wordt geboekt; staat het bedrag al als andere terugbetaling op een
+ * creditorder en is er niets meer open, dan is het 'covered' (zie
+ * coveredElsewhere()); al het andere is 'unmatched' en wordt gemeld
  * (PaynlRefundUnmatchedNotifier). Boeken gebeurt uitsluitend via
  * RefundRegistrar, met zijn lock en zijn guard tegen dubbel boeken.
  */
@@ -24,6 +26,8 @@ class PaynlRefundMatcher
     public const TAG_FAILED = 'order.paynl-refund-check-failed';
 
     public const TAG_SKIPPED = 'order.paynl-refund-skipped';
+
+    public const TAG_COVERED = 'order.paynl-refund-covered';
 
     public function __construct(
         protected PaynlTransactions $transactions,
@@ -105,6 +109,12 @@ class PaynlRefundMatcher
             return new PaynlRefundMatch('registered', $refunded, $registered, $new, $creditOrder, '', $candidateAmounts, $otherAmounts);
         }
 
+        // Alleen als er niets meer openstaat: ligt er nog een open creditorder,
+        // dan hoort het Pay.nl-bedrag waarschijnlijk daarbij en blijft het een melding.
+        if ($candidates->isEmpty() && $others->isEmpty() && $covered = $this->coveredElsewhere($order, $refunded, $registered, $new)) {
+            return $covered;
+        }
+
         $reason = match (true) {
             $candidates->isEmpty() => __('Geen openstaande creditorder met retour voor deze bestelling.'),
             $exact->count() > 1 => __('Meer dan één openstaande creditorder met dit bedrag.'),
@@ -115,6 +125,50 @@ class PaynlRefundMatcher
         $this->notifier->notify($payment, $match);
 
         return $match;
+    }
+
+    /**
+     * Een annulering in het CMS maakt een creditorder zonder retour met meteen
+     * een betaalde terugbetaling (vaak "Contant"), terwijl het geld in
+     * werkelijkheid via Pay.nl teruggaat. Dekken zulke niet-Pay.nl-boekingen
+     * op creditorders van deze bestelling het nieuwe bedrag, dan staat de
+     * terugbetaling al in het CMS: niets boeken en niet alarmeren, alleen één
+     * orderlog. Pay.nl-boekingen tellen hier niet mee; die van deze transactie
+     * zitten al in registeredBefore() en die van een andere transactie zeggen
+     * niets over deze.
+     */
+    protected function coveredElsewhere(Order $order, float $refunded, float $registered, float $new): ?PaynlRefundMatch
+    {
+        $creditOrderIds = Order::query()->where('credit_for_order_id', $order->id)->pluck('id');
+
+        $payments = OrderPayment::query()
+            ->whereIn('order_id', $creditOrderIds)
+            ->where('status', 'paid')
+            ->where(fn ($q) => $q->whereNull('psp')->orWhere('psp', '!=', 'paynl'))
+            ->orderBy('id')
+            ->get(['order_id', 'payment_method', 'amount']);
+
+        $booked = round((float) $payments->sum(fn (OrderPayment $p) => abs((float) $p->amount)), 2);
+        if ($booked + 0.005 < $new) {
+            return null;
+        }
+
+        $invoices = Order::query()->whereIn('id', $payments->pluck('order_id')->unique())->orderBy('id')->pluck('invoice_id')->implode(', ');
+        $methods = $payments->pluck('payment_method')->filter()->unique()->implode(', ') ?: __('onbekende methode');
+
+        $note = __('Pay.nl meldt :nieuw terugbetaald; dat staat al geboekt op creditorder :factuur (:methode, :geboekt). Niets geboekt. Klopt de betaalmethode niet, pas die dan aan; is er ook echt :methode terugbetaald, dan is er dubbel terugbetaald.', [
+            'nieuw' => CurrencyHelper::formatPrice($new),
+            'factuur' => $invoices,
+            'methode' => $methods,
+            'geboekt' => CurrencyHelper::formatPrice($booked),
+        ]);
+
+        // Het nachtelijke vangnet komt elke nacht langs: dezelfde regel maar één keer.
+        if (! OrderLog::query()->where('order_id', $order->id)->where('tag', self::TAG_COVERED)->where('note', $note)->exists()) {
+            OrderLog::createLog(orderId: $order->id, tag: self::TAG_COVERED, note: $note);
+        }
+
+        return new PaynlRefundMatch('covered', $refunded, $registered, $new, null, $note);
     }
 
     /** Wat er al onder deze Pay.nl-transactie op creditorders van deze bestelling is geboekt. */

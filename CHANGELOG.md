@@ -2,6 +2,16 @@
 
 All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 
+## v4.3.2 - 2026-09-21
+
+### Fixed
+- **Een terugbetaling die al in het CMS stond, gaf toch een melding "niet gekoppeld".** Een annulering in het CMS maakt een creditorder zonder retour met meteen een betaalde terugbetaling (bijvoorbeeld "Contant"); meldde Pay.nl daarna hetzelfde bedrag, dan zag de matcher geen open creditorder met retour en rapporteerde "Al geregistreerd €0". Dekken niet-Pay.nl-boekingen op creditorders van de bestelling het nieuwe bedrag en staat er niets meer open, dan is de uitkomst nu `covered`: niets geboekt, geen mail, één orderlog `order.paynl-refund-covered` met creditorder en betaalmethode. Pay.nl-boekingen van een andere transactie tellen niet mee, en met een open creditorder blijft het een melding.
+
+## v4.3.1 - 2026-09-18
+
+### Changed
+- Het factuurland valt terug op het afleverland en de payload wordt vastgelegd.
+
 ## v4.3.0 - 2026-09-17
 
 ### Added
