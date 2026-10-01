@@ -350,6 +350,8 @@ class PayNL implements PaymentProviderContract
             return 'pending';
         }
 
+        PaynlTransactionState::store($orderPayment, (array) $payment->getData());
+
         if ($payment->isPaid()) {
             return 'paid';
         } elseif ($payment->isRefunded(true)) {

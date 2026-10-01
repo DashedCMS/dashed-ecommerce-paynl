@@ -2,6 +2,11 @@
 
 All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 
+## v4.4.0 - 2026-10-01
+
+### Added
+- **De ruwe Pay.nl-staat staat nu op de betaling.** `PayNL::getOrderStatus()` bewaart bij elke statuscheck `paymentDetails.stateName` (PAID, PENDING, VERIFY, CANCEL, EXPIRED, DENIED_xx) in `attributes['psp_state']` met het tijdstip in `attributes['psp_state_at']` (`PaynlTransactionState`). Zo kan de shop een afwijzing door de betaalmethode (Riverty-kredietcheck, `DENIED`) onderscheiden van een klant die zelf afbreekt (`CANCEL`); ec-core ≥ 4.147 leest dit via `OrderPayment::isDeclined()`. De vertaling naar paid/cancelled/pending verandert niet.
+
 ## v4.3.3 - 2026-09-21
 
 ### Fixed
