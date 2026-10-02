@@ -133,6 +133,7 @@ MARKDOWN,
 
         $package
             ->name('dashed-ecommerce-paynl')
+            ->hasTranslations()
             ->hasCommands([
                 SyncPayNLPaymentMethodsCommand::class,
                 SyncPayNLPinTerminalsCommand::class,
