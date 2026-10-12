@@ -2,6 +2,11 @@
 
 All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 
+## v4.5.0 - 2026-10-12
+
+### Changed
+- **Een Pay.nl-terugbetaling die nog nergens bij past, wordt eerst opnieuw geprobeerd in plaats van meteen gemeld.** De melding van Pay.nl kwam vaak binnen vóórdat de creditorder in het CMS bestond (eerst terugbetalen bij Pay.nl, seconden later annuleren of de retour verwerken), en gaf dan onterecht de mail "niet gekoppeld". `MatchPaynlRefundJob` probeert het nu direct en daarna met opbouwende tussenpozen (2, 5, 10, 20 en 40 minuten, daarna elk uur, `PaynlRefundRetrySchedule`) tot 24 uur na de eerste melding; pas als het bedrag dan nog nergens bij past, gaan mail, push en orderlog `order.paynl-refund-unmatched` uit. Bij de eerste mislukte poging komt er één orderlog `order.paynl-refund-retrying` met het tijdstip tot wanneer er geprobeerd wordt. Het nachtelijke vangnet `paynl:match-refunds` doet één poging en meldt direct, zoals voorheen. `PaynlRefundMatcher::match()` heeft een tweede argument `$notify` (standaard `true`).
+
 ## v4.4.0 - 2026-10-01
 
 ### Added

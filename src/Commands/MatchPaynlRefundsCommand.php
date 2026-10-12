@@ -43,7 +43,8 @@ class MatchPaynlRefundsCommand extends Command
             ->unique('id');
 
         foreach ($payments as $payment) {
-            MatchPaynlRefundJob::dispatch($payment);
+            // Eén poging: het vangnet komt morgen weer langs.
+            MatchPaynlRefundJob::dispatch($payment, false);
         }
 
         $this->info(__(':aantal job(s) klaargezet voor :orders bestelling(en).', ['aantal' => $payments->count(), 'orders' => $parentIds->count()]));

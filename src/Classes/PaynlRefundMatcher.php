@@ -18,7 +18,8 @@ use Dashed\DashedEcommerceCore\Services\OrderReturn\RefundRegistrar;
  * kandidaat wordt geboekt; staat het bedrag al als andere terugbetaling op een
  * creditorder en is er niets meer open, dan is het 'covered' (zie
  * coveredElsewhere()); al het andere is 'unmatched' en wordt gemeld
- * (PaynlRefundUnmatchedNotifier). Boeken gebeurt uitsluitend via
+ * (PaynlRefundUnmatchedNotifier; via MatchPaynlRefundJob pas na 24 uur
+ * opnieuw proberen). Boeken gebeurt uitsluitend via
  * RefundRegistrar, met zijn lock en zijn guard tegen dubbel boeken.
  */
 class PaynlRefundMatcher
@@ -36,7 +37,11 @@ class PaynlRefundMatcher
     ) {
     }
 
-    public function match(OrderPayment $payment): PaynlRefundMatch
+    /**
+     * @param  bool  $notify  false: een 'unmatched' wordt niet gemeld; de aanroeper
+     *   (MatchPaynlRefundJob) probeert het later opnieuw en meldt zelf.
+     */
+    public function match(OrderPayment $payment, bool $notify = true): PaynlRefundMatch
     {
         $order = $payment->order;
         if ($payment->psp !== 'paynl' || $payment->status !== 'paid' || ! $payment->psp_id || ! $order) {
@@ -101,7 +106,9 @@ class PaynlRefundMatcher
                 }
 
                 $match = new PaynlRefundMatch('unmatched', $refunded, $registered, $new, null, $e->getMessage(), $candidateAmounts, $otherAmounts);
-                $this->notifier->notify($payment, $match);
+                if ($notify) {
+                    $this->notifier->notify($payment, $match);
+                }
 
                 return $match;
             }
@@ -122,7 +129,9 @@ class PaynlRefundMatcher
         };
 
         $match = new PaynlRefundMatch('unmatched', $refunded, $registered, $new, null, $reason, $candidateAmounts, $otherAmounts);
-        $this->notifier->notify($payment, $match);
+        if ($notify) {
+            $this->notifier->notify($payment, $match);
+        }
 
         return $match;
     }
