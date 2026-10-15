@@ -2,15 +2,21 @@ name: Format code with PHP CS Fixer
 
 on: [push]
 
+permissions:
+  contents: write
+
 jobs:
   php-cs-fixer:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-          ref: ${{ github.head_ref }}
+          # head_ref is alleen gevuld bij pull requests. Op een push is hij leeg,
+          # waardoor checkout in detached HEAD belandt en de commit-stap faalt met
+          # "You are not currently on a branch". ref_name vangt dat op.
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Run PHP CS Fixer
         uses: docker://oskarstark/php-cs-fixer-ga
@@ -18,6 +24,6 @@ jobs:
           args: --config=.php_cs.dist.php --allow-risky=yes
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: Styling fixed with PHP CS Fixer
