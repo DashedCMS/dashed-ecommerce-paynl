@@ -20,6 +20,7 @@
     "Pay.nl-terugbetaling niet gekoppeld voor bestelling :nummer": "Pay.nl refund not matched for order :nummer",
     "Pay.nl-terugbetaling overgeslagen: :nieuw was intussen al geregistreerd op creditorder :factuur. :fout": "Pay.nl refund skipped: :nieuw had meanwhile already been registered on credit order :factuur. :fout",
     "Pay.nl meldt :nieuw terugbetaald; dat staat al geboekt op creditorder :factuur (:methode, :geboekt). Niets geboekt. Klopt de betaalmethode niet, pas die dan aan; is er ook echt :methode terugbetaald, dan is er dubbel terugbetaald.": "Pay.nl reports :nieuw refunded; that is already booked on credit order :factuur (:methode, :geboekt). Nothing booked. If the payment method is wrong, change it; if :methode was really refunded as well, the refund was made twice.",
+    "Pay.nl staat in testmodus op productie (site :site). Er komt geen enkele betaling echt binnen.": "Pay.nl is in test mode in production (site :site). No payment actually comes in.",
     "PayNL": "PayNL",
     "PayNL AT hash": "PayNL AT hash",
     "PayNL SL code": "PayNL SL code",

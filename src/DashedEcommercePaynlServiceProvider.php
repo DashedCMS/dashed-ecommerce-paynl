@@ -17,6 +17,30 @@ class DashedEcommercePaynlServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        // Systeembalk: testmodus op productie betekent dat er geen enkele
+        // betaling echt binnenkomt.
+        if (class_exists(\Dashed\DashedCore\Classes\SystemHealth::class)) {
+            \Dashed\DashedCore\Classes\SystemHealth::extend(function (): array {
+                if (! app()->isProduction()) {
+                    return [];
+                }
+
+                $items = [];
+                foreach (\Dashed\DashedCore\Classes\Sites::getSites() as $site) {
+                    if (\Dashed\DashedCore\Models\Customsetting::get('paynl_test_mode', $site['id'], false)) {
+                        $items[] = [
+                            'key' => 'paynl_test_mode_'.$site['id'],
+                            'label' => 'Pay.nl',
+                            'status' => 'danger',
+                            'detail' => __('Pay.nl staat in testmodus op productie (site :site). Er komt geen enkele betaling echt binnen.', ['site' => $site['name'] ?? $site['id']]),
+                        ];
+                    }
+                }
+
+                return $items;
+            }, 'paynl');
+        }
+
         // Register the PayNL webhook event_id extractor so the
         // EnsureWebhookIdempotency middleware can deduplicate retries.
         //
