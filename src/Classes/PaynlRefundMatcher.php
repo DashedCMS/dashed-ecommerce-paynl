@@ -150,11 +150,12 @@ class PaynlRefundMatcher
     {
         $creditOrderIds = Order::query()->where('credit_for_order_id', $order->id)->pluck('id');
 
-        $payments = OrderPayment::query()
-            ->whereIn('order_id', $creditOrderIds)
-            ->where('status', 'paid')
-            ->where(fn ($q) => $q->whereNull('psp')->orWhere('psp', '!=', 'paynl'))
-            ->where(fn ($q) => MoneyPayment::scope($q))
+        $payments = MoneyPayment::scope(
+            OrderPayment::query()
+                ->whereIn('order_id', $creditOrderIds)
+                ->where('status', 'paid')
+                ->where(fn ($q) => $q->whereNull('psp')->orWhere('psp', '!=', 'paynl'))
+        )
             ->orderBy('id')
             ->get(['order_id', 'payment_method', 'amount']);
 
