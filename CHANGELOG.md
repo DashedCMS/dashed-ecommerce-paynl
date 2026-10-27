@@ -2,6 +2,11 @@
 
 All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 
+## Unreleased
+
+### Fixed
+- **Cadeaubonboekingen tellen niet meer als "al terugbetaald" in de Pay.nl-koppeling.** ec-core boekt cadeaubonnen als `OrderPayment` met `psp = 'giftcard'`. `PaynlRefundMatcher` negeert die nu in `openCreditOrders()`, `coveredElsewhere()` en de race-controle, zodat een creditorder van een deels met een cadeaubon betaalde order gewoon gekoppeld wordt in plaats van `covered` te worden met een misleidende "dubbel terugbetaald"-log (`MoneyPayment`).
+
 ## v4.5.0 - 2026-10-12
 
 ### Changed

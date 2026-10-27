@@ -88,7 +88,7 @@ class PaynlRefundMatcher
             } catch (InvalidArgumentException $e) {
                 // Race met een handmatige registratie: inmiddels terugbetaald is 'nothing',
                 // anders een gewone unmatched met de reden van de registrar.
-                if ($creditOrder->fresh()->orderPayments()->where('status', 'paid')->exists()) {
+                if (MoneyPayment::scope($creditOrder->fresh()->orderPayments()->where('status', 'paid'))->exists()) {
                     // Wel een spoor: zonder orderlog verdwijnt een overgeslagen
                     // bedrag hier geruisloos en is later niet na te gaan waarom
                     // Pay.nl meer meldt dan er geboekt staat.
@@ -154,6 +154,7 @@ class PaynlRefundMatcher
             ->whereIn('order_id', $creditOrderIds)
             ->where('status', 'paid')
             ->where(fn ($q) => $q->whereNull('psp')->orWhere('psp', '!=', 'paynl'))
+            ->where(fn ($q) => MoneyPayment::scope($q))
             ->orderBy('id')
             ->get(['order_id', 'payment_method', 'amount']);
 
@@ -217,7 +218,7 @@ class PaynlRefundMatcher
         $open = Order::query()
             ->where('credit_for_order_id', $order->id)
             ->where('status', 'return')
-            ->whereDoesntHave('orderPayments', fn ($q) => $q->where('status', 'paid'))
+            ->whereDoesntHave('orderPayments', fn ($q) => MoneyPayment::scope($q->where('status', 'paid')))
             ->with('originReturn')
             ->orderBy('id')
             ->get();
