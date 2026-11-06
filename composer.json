@@ -18,7 +18,7 @@
     "require": {
         "php": "^8.3|^8.4",
         "spatie/laravel-package-tools": "^1.16",
-        "paynl/sdk": "^1.6"
+        "paynl/php-sdk": "^2.1"
     },
     "require-dev": {
         "dashed/dashed-core": "^4.80",

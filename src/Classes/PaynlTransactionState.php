@@ -6,8 +6,8 @@ use Illuminate\Support\Carbon;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 
 /**
- * Bewaart de ruwe Pay.nl-staat (paymentDetails.stateName: PAID, PENDING, VERIFY,
- * CANCEL, EXPIRED, DENIED_xx) op de betaling. getOrderStatus() vertaalt alles
+ * Bewaart de ruwe Pay.-staat (status.action op Multicore, paymentDetails.stateName
+ * in de oude API: PAID, PENDING, VERIFY, CANCEL, EXPIRED, DENIED_xx) op de betaling. getOrderStatus() vertaalt alles
  * naar paid/cancelled/pending en gooit daarmee het verschil weg tussen een
  * klant die zelf afbreekt (CANCEL) en een betaalmethode die weigert (DENIED,
  * bij Riverty de kredietcheck). De shop leest de staat via
@@ -21,7 +21,7 @@ class PaynlTransactionState
 
     public static function fromTransactionData(array $data): ?string
     {
-        $state = $data['paymentDetails']['stateName'] ?? null;
+        $state = $data['status']['action'] ?? $data['paymentDetails']['stateName'] ?? null;
 
         if (! is_string($state) || trim($state) === '') {
             return null;

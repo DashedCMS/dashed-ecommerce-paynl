@@ -7,6 +7,11 @@ All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 ### Fixed
 - **Cadeaubonboekingen tellen niet meer als "al terugbetaald" in de Pay.nl-koppeling.** ec-core boekt cadeaubonnen als `OrderPayment` met `psp = 'giftcard'`. `PaynlRefundMatcher` negeert die nu in `openCreditOrders()`, `coveredElsewhere()` en de race-controle, zodat een creditorder van een deels met een cadeaubon betaalde order gewoon gekoppeld wordt in plaats van `covered` te worden met een misleidende "dubbel terugbetaald"-log (`MoneyPayment`).
 
+## v4.8.0 - 2026-11-06
+
+### Changed
+- **Over op Multicore met `paynl/php-sdk`.** Pay. schakelt Legacy (`rest-api.pay.nl`, `paynl/sdk`) in februari 2027 uit. Transacties, status, terugbetaald bedrag, betaalmethodes en terminals lopen nu via `connect.pay.nl` en `rest.pay.nl`. Geen nieuwe instelling: de bestaande API-token logt in met de gebruikersnaam `token`. Vereist ec-core v4.180.2 of hoger voor de JSON-exchange. Pinbetalingen op de nieuwe route zijn nog niet met een echte terminal getoetst.
+
 ## v4.7.1 - 2026-10-28
 
 ### Fixed
