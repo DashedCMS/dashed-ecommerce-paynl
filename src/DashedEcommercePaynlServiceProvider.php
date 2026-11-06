@@ -97,9 +97,9 @@ class DashedEcommercePaynlServiceProvider extends PackageServiceProvider
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(SyncPayNLPaymentMethodsCommand::class)
-                ->everyFifteenMinutes();
+                ->hourly();
             $schedule->command(SyncPayNLPinTerminalsCommand::class)
-                ->everyFifteenMinutes();
+                ->hourly();
             $schedule->command(MatchPaynlRefundsCommand::class)
                 ->dailyAt('04:00')
                 ->withoutOverlapping();

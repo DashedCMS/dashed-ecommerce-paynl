@@ -2,6 +2,11 @@
 
 All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 
+## v4.8.1 - 2026-11-06
+
+### Changed
+- Betaalmethodes en pinterminals worden elk uur gesynchroniseerd in plaats van elk kwartier.
+
 ## Unreleased
 
 ### Fixed
