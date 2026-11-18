@@ -2,6 +2,11 @@
 
 All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 
+## v4.9.0 - 2026-11-18
+
+### Added
+- **Express-checkout voorbereid (Apple Pay in één stap vanaf de wagen), standaard UIT.** Nieuwe instellingen per site op de PayNL-pagina: `paynl_express_checkout_enabled` (schakelaar), `paynl_parts_secret` (secret van de Sales Location voor Pay.Parts), `paynl_parts_environment` (`production` of `zero`) en `paynl_apple_domain_association`. Routes `POST paynl/express/{session,quote,order,confirm}` (404 zolang de schakelaar uit staat): een Pay.Parts-sessie voor de wagen, verzendopties en totaal voor een wallet-adres, een order met adres en e-mail uit de wallet via de eigen checkout-component van de site (`checkout.checkout`, dus met alle projectregels) en het koppelen van het Pay.-order-id na controle van referentie en bedrag bij Pay. Zonder Pay.Parts-sessie start `order` een gewone Pay.-transactie met de wallet-methode (2277/2558). `GET /.well-known/apple-developer-merchantid-domain-association` toont de inhoud van de instelling (leeg = 404, los van de schakelaar). `PayNL::startTransaction()` koppelt alleen binnen zo'n express-sessie in plaats van een transactie te starten; daarbuiten ongewijzigd.
+
 ## v4.8.1 - 2026-11-06
 
 ### Changed

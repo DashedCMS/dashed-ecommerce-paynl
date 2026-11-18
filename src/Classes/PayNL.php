@@ -31,6 +31,7 @@ use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use PayNL\Sdk\Model\Request\ServiceGetConfigRequest;
 use PayNL\Sdk\Model\Request\TransactionStatusRequest;
 use Dashed\DashedEcommerceCore\Classes\PaymentMethods;
+use Dashed\DashedEcommercePaynl\ExpressCheckout\ExpressCheckout;
 use Dashed\DashedEcommerceCore\Contracts\PaymentProviderContract;
 
 class PayNL implements PaymentProviderContract
@@ -238,6 +239,23 @@ class PayNL implements PaymentProviderContract
     {
         $orderPayment->psp = self::PSP;
         $orderPayment->save();
+
+        // Express-checkout via Pay.Parts: de klant betaalt in het wallet-blad
+        // van de sessie die al loopt. Geen tweede transactie starten, alleen
+        // koppelen; het Pay.-order-id volgt via ExpressCheckoutController::confirm().
+        $partsLink = ExpressCheckout::$partsLink;
+        if ($partsLink && ExpressCheckout::isWalletMethodId($orderPayment->paymentMethod?->psp_id)) {
+            $orderPayment->attributes = array_merge((array) $orderPayment->attributes, [
+                'payparts' => $partsLink,
+            ]);
+            $orderPayment->save();
+            ExpressCheckout::$linkedPaymentId = $orderPayment->id;
+
+            return [
+                'transaction' => null,
+                'redirectUrl' => url(ShoppingCart::getCompleteUrl()) . '?orderId=' . $orderPayment->order->hash . '&paymentId=' . $orderPayment->hash,
+            ];
+        }
 
         $siteId = Sites::getActive();
 

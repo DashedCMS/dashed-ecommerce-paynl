@@ -158,6 +158,7 @@ MARKDOWN,
         $package
             ->name('dashed-ecommerce-paynl')
             ->hasTranslations()
+            ->hasRoute('express-checkout')
             ->hasCommands([
                 SyncPayNLPaymentMethodsCommand::class,
                 SyncPayNLPinTerminalsCommand::class,
