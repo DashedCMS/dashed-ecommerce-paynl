@@ -21,7 +21,7 @@
         "paynl/php-sdk": "^2.1"
     },
     "require-dev": {
-        "dashed/dashed-core": "^4.80",
+        "dashed/dashed-core": "^4.124",
         "dashed/dashed-ecommerce-core": "*",
         "dashed/dashed-translations": "*",
         "filament/upgrade": "^4.0",

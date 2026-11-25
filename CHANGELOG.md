@@ -2,6 +2,11 @@
 
 All notable changes to `dashed-ecommerce-paynl` will be documented in this file.
 
+## v4.10.0 - 2026-11-25
+
+### Changed
+- Meldingen over niet-gekoppelde terugbetalingen gaan naar de superadmins via de nieuwe vlag `is_superadmin` (vereist dashed-core ^4.124).
+
 ## v4.9.0 - 2026-11-18
 
 ### Added

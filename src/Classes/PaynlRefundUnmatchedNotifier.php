@@ -85,7 +85,7 @@ class PaynlRefundUnmatchedNotifier
         }
 
         return User::query()
-            ->where('role', 'superadmin')
+            ->superadmins()
             ->whereNotNull('email')
             ->orderBy('id')
             ->pluck('email')
